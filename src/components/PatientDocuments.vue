@@ -19,6 +19,7 @@ export default {
         ...this.columns.reduce((o, key) => ((o[key] = 1), o), {}),
         date: -1,
       },
+      idDetails: null,
     };
   },
   computed: {
@@ -60,6 +61,13 @@ export default {
     capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
     },
+    showMoreDetail(id) {
+      if (this.idDetails === id) {
+        this.idDetails = null;
+        return;
+      }
+      this.idDetails = id;
+    },
   },
 };
 </script>
@@ -79,7 +87,7 @@ export default {
       <col style="width: 14%" />
       <col style="width: auto" />
       <col style="width: auto" />
-      <col style="width: 20px" />
+      <col style="width: 2%" />
       <thead>
         <tr>
           <th
@@ -96,19 +104,44 @@ export default {
       </thead>
 
       <tbody>
-        <tr v-for="entry in filteredData" :key="entry.title">
-          <td v-for="key in columns" :key="key">
-            <div v-if="key !== 'aperçu'">
-              {{ entry[key] }}
-            </div>
-            <div v-else>
-              <p class="document-title-button">{{ entry["title"] }}<button><span class="arrow" :class="sortOrders[key] > 0 ? 'right' : 'dsc'">
-            </span></button></p>
-              <p>{{ entry["extract"] }}...</p>
-              <!-- <p class="PatientDocuments__document-content" v-html="entry['displayed_text']"></p> -->
-            </div>
-          </td>
-        </tr>
+        <template v-for="entry in filteredData">
+          <tr
+            :key="entry.id"
+            :class="idDetails === entry.id && 'background-darker'"
+          >
+            <td v-for="key in columns" :key="key">
+              <div v-if="key !== 'aperçu'">
+                {{ entry[key] }}
+              </div>
+
+              <div v-else-if="idDetails !== entry.id">
+                <!-- <div class="document-title-button"> -->
+                  <h2>{{ entry["title"] }}</h2>
+                <!-- </div> -->
+                <p>{{ entry["extract"] }}...</p>
+              </div>
+            </td>
+            <td class="document-button">
+              <button @click="showMoreDetail(entry.id)">
+                <span
+                  class="arrow"
+                  :class="idDetails === entry.id ? 'dsc' : 'right'"
+                >
+                </span>
+              </button>
+            </td>
+          </tr>
+
+          <tr :key="entry.title" v-if="idDetails == entry.id">
+            <td colspan="5">
+              <h2>{{ entry["title"] }}</h2>
+              <p
+                class="PatientDocuments__document-content"
+                v-html="entry['displayed_text']"
+              ></p>
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
 
@@ -137,6 +170,10 @@ export default {
   padding-bottom: 2px;
   height: 18px;
 }
+h2 {
+  margin: 0;
+  font-size: 18px;
+}
 table {
   border-collapse: collapse;
   border-radius: var(--global-radius);
@@ -157,6 +194,10 @@ tr {
 th:first-child,
 td:first-child {
   padding-left: 10px;
+}
+th:last-child,
+td:last-child {
+  padding-right: 20px;
 }
 th,
 td {
@@ -185,23 +226,31 @@ th.active .arrow {
 .arrow.asc {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-bottom: 4px solid rgb(59, 58, 58);
+  border-bottom: 5px solid rgb(59, 58, 58);
 }
 
 .arrow.dsc {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 4px solid rgb(77, 75, 75);
+  border-top: 5px solid rgb(77, 75, 75);
 }
-.arrow.right{
-  border-left: 4px solid rgb(59, 58, 58);
+.arrow.right {
+  border-left: 5px solid rgb(59, 58, 58);
   border-bottom: 4px solid transparent;
   border-top: 4px solid transparent;
 }
-.document-title-button{
+.document-button {
   margin: 0;
-  display:flex;
-  justify-content: space-between;
   text-align: right;
+}
+.document-button button {
+  border: none;
+  background: none;
+}
+.document-button button:hover {
+  cursor: pointer;
+}
+.background-darker {
+  background-color: #f3f5f9;
 }
 </style>

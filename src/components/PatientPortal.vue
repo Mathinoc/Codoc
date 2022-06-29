@@ -35,11 +35,12 @@ export default {
           return patient;
         })
         .then((patient) => {
-          const documents = patient.documents.map((el) => {
+          const documents = patient.documents.map((el, index) => {
             el["date"] = el.document_date;
             el["type"] = el.document_type;
             el["origine"] = el.document_origin_code;
             el["extract"] = this.convertToPlain(el.displayed_text).slice(0,200);
+            el.id = index;
             return el;
           });
           patient.documents = documents;
