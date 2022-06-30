@@ -27,13 +27,29 @@ export default {
       const sortKey = this.sortKey;
       const filterKey = this.searchQuery && this.searchQuery.toLowerCase();
       const order = this.sortOrders[sortKey] || 1;
-      let data = this.patientData.documents;
+      let data = this.patientData.documents.map((el) => {
+        const extract = this.convertToPlain(el.displayed_text).slice(0, 100);
+        el["extract"] = extract;
+        return el;
+      });
       if (filterKey) {
-        data = data.filter((row) => {
-          return Object.keys(row).some((key) => {
-            return String(row[key]).toLowerCase().indexOf(filterKey) > -1;
+        const regEx = new RegExp(filterKey, "ig");
+        data = data
+          .filter((row) => {
+            return row.displayed_text.toLowerCase().indexOf(filterKey) > -1;
+          })
+          .map((row) => {
+            row["displayed_text-highlighted"] = row.displayed_text.replaceAll(
+              regEx,
+              "<span class='highlight-text'>" + filterKey + "</span>"
+            );
+            row["extract-highlighted"] = row.extract.replaceAll(
+              regEx,
+              "<span class='highlight-text'>" + filterKey + "</span>"
+            );
+
+            return row;
           });
-        });
       }
       if (sortKey) {
         if (sortKey !== "aperçu") {
@@ -67,6 +83,23 @@ export default {
         return;
       }
       this.idDetails = id;
+    },
+    convertToPlain(html) {
+      let tempDivElement = document.createElement("div");
+      tempDivElement.innerHTML = html;
+      return tempDivElement.textContent || tempDivElement.innerText || "";
+    },
+    formatDate(dateStr) {
+      const options = {
+        // year: "numeric",
+        month: "short",
+        day: "numeric",
+      };
+      const rawDate = new Date(Date.parse(dateStr)).toLocaleDateString(
+        "fr-FR",
+        options
+      );
+      return rawDate;
     },
   },
 };
@@ -110,15 +143,27 @@ export default {
             :class="idDetails === entry.id && 'background-darker'"
           >
             <td v-for="key in columns" :key="key">
-              <div v-if="key !== 'aperçu'">
+              <div v-if="key === 'date'">
+                <span class="PatientDocuments__document-year">{{ new Date(entry['date']).getFullYear() }}</span>
+                <span class="PatientDocuments__document-day-month">{{ formatDate(entry['date']) }}</span>
+              </div>
+              <div v-else-if="key !== 'aperçu'">
                 {{ entry[key] }}
               </div>
 
               <div v-else-if="idDetails !== entry.id">
-                <!-- <div class="document-title-button"> -->
-                  <h2>{{ entry["title"] }}</h2>
-                <!-- </div> -->
-                <p>{{ entry["extract"] }}...</p>
+                <h2>{{ entry["title"] }}</h2>
+                <p
+                  v-if="searchQuery !== ''"
+                  class="PatientDocuments__document-extract"
+                  v-html="entry['extract-highlighted']"
+                ></p>
+                <p
+                  v-else
+                  class="PatientDocuments__document-extract"
+                  v-html="entry['extract']"
+                ></p>
+                ...
               </div>
             </td>
             <td class="document-button">
@@ -132,10 +177,20 @@ export default {
             </td>
           </tr>
 
-          <tr :key="entry.title" v-if="idDetails == entry.id">
+          <tr
+            class="full-document-row"
+            :key="entry.title"
+            v-if="idDetails == entry.id"
+          >
             <td colspan="5">
               <h2>{{ entry["title"] }}</h2>
               <p
+                v-if="searchQuery !== ''"
+                class="PatientDocuments__document-content"
+                v-html="entry['displayed_text-highlighted']"
+              ></p>
+              <p
+                v-else
                 class="PatientDocuments__document-content"
                 v-html="entry['displayed_text']"
               ></p>
@@ -150,16 +205,30 @@ export default {
 </template>
 
 <style>
+.highlight-text {
+  background-color: #ffff00;
+  display: inline;
+}
 .PatientDocuments {
   background-color: var(--background-color);
   flex-grow: 1;
-  padding: 0 20px;
+  padding: 0 20px 20px 20px;
 }
-.PatientDocuments__document-content {
-  display: flex;
-  flex-direction: column;
-  align-items: left;
-  text-align: left;
+.PatientDocuments__document-year{
+  font-weight: 700;
+}
+.PatientDocuments__document-day-month{
+padding-left: 10px;
+}
+.PatientDocuments .PatientDocuments__document-extract {
+  display: inline;
+}
+
+.full-document-row .PatientDocuments__document-content {
+  display: block;
+  border-top: 1px solid var(--color-border);
+  margin-top: 15px;
+  padding-top: 15px;
 }
 .PatientDocuments p {
   display: flex;
@@ -204,12 +273,14 @@ td {
   min-width: 100px;
   padding-top: 10px;
   padding-bottom: 10px;
+  padding-right:10px;
 }
 th {
   cursor: pointer;
 }
 
-table {
+table .full-document-row {
+  border-bottom: 1px solid var(--color-border);
 }
 th.active .arrow {
   opacity: 1;
@@ -252,5 +323,6 @@ th.active .arrow {
 }
 .background-darker {
   background-color: #f3f5f9;
+  border-bottom: none;
 }
 </style>

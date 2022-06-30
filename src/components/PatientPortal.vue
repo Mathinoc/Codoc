@@ -36,11 +36,13 @@ export default {
         })
         .then((patient) => {
           const documents = patient.documents.map((el, index) => {
-            el["date"] = el.document_date;
+            el["date"] = el.document_date //this.formatDate(el.document_date);
             el["type"] = el.document_type;
             el["origine"] = el.document_origin_code;
-            el["extract"] = this.convertToPlain(el.displayed_text).slice(0,200);
             el.id = index;
+            delete el.document_date;
+            delete el.document_type;
+            delete el.document_origin_code;
             return el;
           });
           patient.documents = documents;
@@ -60,7 +62,7 @@ export default {
     formatDate(dateStr) {
       const options = {
         year: "numeric",
-        month: "numeric",
+        month: "short",
         day: "numeric",
       };
       const rawDate = new Date(Date.parse(dateStr)).toLocaleDateString(

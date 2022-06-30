@@ -24,11 +24,13 @@ export default {
     },
     onInput(e) {
       this.searchQuery = e.target.value;
-      this.$emit('response', e.target.value)
+      if (e.target.value === "") {
+        this.$emit('response', this.searchQuery)
+      }
     },
-    submit(e) {
-      this.$emit('response', e.target.value)
-    }
+    submit() {
+      this.$emit('response', this.searchQuery)
+    },
   },
 };
 </script>
@@ -59,7 +61,7 @@ export default {
           <button v-on:click="submit">
             <img src="../assets/magnifier.png" />
           </button>
-          <input type="text" @input="onInput" placeholder="Search..."/>
+          <input type="search" @input="onInput" @keyup.enter="submit" placeholder="Search..."/>
         </div>
       </div>
     </div>
