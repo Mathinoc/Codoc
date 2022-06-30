@@ -101,6 +101,11 @@ export default {
       );
       return rawDate;
     },
+    sameYears(date1, date2) {
+      const year1 = new Date(date1).getFullYear()
+      const year2 = new Date(date2).getFullYear()
+      return year1 === year2
+    }
   },
 };
 </script>
@@ -116,7 +121,7 @@ export default {
       {{ patientData.documents.length }} document trouvé
     </p>
     <table v-if="filteredData.length">
-      <col style="width: auto" />
+      <col style="max-width: 40px" />
       <col style="width: 14%" />
       <col style="width: auto" />
       <col style="width: auto" />
@@ -137,16 +142,24 @@ export default {
       </thead>
 
       <tbody>
-        <template v-for="entry in filteredData">
+        <template v-for="(entry, index) in filteredData">
           <tr
             :key="entry.id"
-            :class="idDetails === entry.id && 'background-darker'"
+            :class="[idDetails === entry.id && 'background-darker',(index > 0 && !sameYears(filteredData[index-1].date, entry.date)) && 'top-border' ]"
           >
             <td v-for="key in columns" :key="key">
-              <div v-if="key === 'date'">
-                <span class="PatientDocuments__document-year">{{ new Date(entry['date']).getFullYear() }}</span>
-                <span class="PatientDocuments__document-day-month">{{ formatDate(entry['date']) }}</span>
+              <div v-if="key === 'date'" class="PatientDocuments__document">
+                <span
+                v-if="index === 0 || !sameYears(filteredData[index-1].date, entry.date)"
+                class="PatientDocuments__document-year"
+                >
+                  {{ new Date(entry["date"]).getFullYear() }}
+                </span>
+                <span class="PatientDocuments__document-day-month">{{
+                  formatDate(entry["date"])
+                }}</span>
               </div>
+
               <div v-else-if="key !== 'aperçu'">
                 {{ entry[key] }}
               </div>
@@ -214,11 +227,15 @@ export default {
   flex-grow: 1;
   padding: 0 20px 20px 20px;
 }
-.PatientDocuments__document-year{
+.PatientDocuments__document{
+  /* text-align: right; */
+}
+.PatientDocuments__document-year {
   font-weight: 700;
 }
-.PatientDocuments__document-day-month{
-padding-left: 10px;
+.PatientDocuments__document-day-month {
+  padding: 0 10px;
+  float: right;
 }
 .PatientDocuments .PatientDocuments__document-extract {
   display: inline;
@@ -263,6 +280,7 @@ tr {
 th:first-child,
 td:first-child {
   padding-left: 10px;
+  width: 115px;
 }
 th:last-child,
 td:last-child {
@@ -273,7 +291,7 @@ td {
   min-width: 100px;
   padding-top: 10px;
   padding-bottom: 10px;
-  padding-right:10px;
+  padding-right: 10px;
 }
 th {
   cursor: pointer;
@@ -281,6 +299,9 @@ th {
 
 table .full-document-row {
   border-bottom: 1px solid var(--color-border);
+}
+table .top-border{
+  border-top: 1px solid var(--color-border);
 }
 th.active .arrow {
   opacity: 1;
