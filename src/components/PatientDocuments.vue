@@ -12,43 +12,46 @@ export default {
         "document_type",
         "document_origin_code",
         "title",
-        // "displayed_text"
       ],
       sortKey: "date",
       sortOrders: {
-        ...this.columns.reduce((o, key) => ((o[key] = 1), o), {}),
+        ...this.columns.reduce((obj, key) => {
+          obj[key] = 1;
+          return obj;
+        }, {}),
         date: -1,
       },
-      idDetails: null,
+      idFullDocument: null,
     };
   },
   computed: {
     filteredData() {
       const sortKey = this.sortKey;
-      const filterKey = this.searchQuery && this.searchQuery.toLowerCase();
+      const searchQuery = this.searchQuery && this.searchQuery.toLowerCase();
       const order = this.sortOrders[sortKey] || 1;
       let data = this.patientData.documents.map((el) => {
-        const extract = this.convertToPlain(el.displayed_text).slice(0, 100);
-        el["extract"] = extract;
+        el["extract"] = this.convertToPlain(el.displayed_text).slice(0, 100);
         return el;
       });
-      if (filterKey) {
-        const regEx = new RegExp(filterKey, "ig");
+      if (searchQuery) {
+        const regEx = new RegExp(`(${searchQuery})`, "ig");
         data = data
-          .filter((row) => {
-            return row.displayed_text.toLowerCase().indexOf(filterKey) > -1;
+          .filter((document) => {
+            return (
+              document.displayed_text.toLowerCase().indexOf(searchQuery) > -1
+            );
           })
-          .map((row) => {
-            row["displayed_text-highlighted"] = row.displayed_text.replaceAll(
+          .map((document) => {
+            document["displayed_text-highlighted"] =
+              document.displayed_text.replaceAll(
+                regEx,
+                "<span class='highlight-text'>$1</span>"
+              );
+            document["extract-highlighted"] = document.extract.replaceAll(
               regEx,
-              "<span class='highlight-text'>" + filterKey + "</span>"
+              "<span class='highlight-text'>$1</span>"
             );
-            row["extract-highlighted"] = row.extract.replaceAll(
-              regEx,
-              "<span class='highlight-text'>" + filterKey + "</span>"
-            );
-
-            return row;
+            return document;
           });
       }
       if (sortKey) {
@@ -77,21 +80,20 @@ export default {
     capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
     },
-    showMoreDetail(id) {
-      if (this.idDetails === id) {
-        this.idDetails = null;
+    showFullDocument(id) {
+      if (this.idFullDocument === id) {
+        this.idFullDocument = null;
         return;
       }
-      this.idDetails = id;
+      this.idFullDocument = id;
     },
     convertToPlain(html) {
-      let tempDivElement = document.createElement("div");
-      tempDivElement.innerHTML = html;
-      return tempDivElement.textContent || tempDivElement.innerText || "";
+      let divElement = document.createElement("div");
+      divElement.innerHTML = html;
+      return divElement.innerText || "";
     },
     formatDate(dateStr) {
       const options = {
-        // year: "numeric",
         month: "short",
         day: "numeric",
       };
@@ -101,11 +103,11 @@ export default {
       );
       return rawDate;
     },
-    sameYears(date1, date2) {
-      const year1 = new Date(date1).getFullYear()
-      const year2 = new Date(date2).getFullYear()
-      return year1 === year2
-    }
+    areSameYears(date1, date2) {
+      const year1 = new Date(date1).getFullYear();
+      const year2 = new Date(date2).getFullYear();
+      return year1 === year2;
+    },
   },
 };
 </script>
@@ -120,8 +122,9 @@ export default {
       <img src="../assets/document.png" />
       {{ patientData.documents.length }} document trouvé
     </p>
+
     <table v-if="filteredData.length">
-      <col style="max-width: 40px" />
+      <col style="max-width: auto" />
       <col style="width: 14%" />
       <col style="width: auto" />
       <col style="width: auto" />
@@ -145,13 +148,21 @@ export default {
         <template v-for="(entry, index) in filteredData">
           <tr
             :key="entry.id"
-            :class="[idDetails === entry.id && 'background-darker',(index > 0 && !sameYears(filteredData[index-1].date, entry.date)) && 'top-border' ]"
+            :class="[
+              idFullDocument === entry.id && 'background-darker',
+              index > 0 &&
+                !areSameYears(filteredData[index - 1].date, entry.date) &&
+                'top-border',
+            ]"
           >
             <td v-for="key in columns" :key="key">
               <div v-if="key === 'date'" class="PatientDocuments__document">
                 <span
-                v-if="index === 0 || !sameYears(filteredData[index-1].date, entry.date)"
-                class="PatientDocuments__document-year"
+                  v-if="
+                    index === 0 ||
+                    !areSameYears(filteredData[index - 1].date, entry.date)
+                  "
+                  class="PatientDocuments__document-year"
                 >
                   {{ new Date(entry["date"]).getFullYear() }}
                 </span>
@@ -164,7 +175,7 @@ export default {
                 {{ entry[key] }}
               </div>
 
-              <div v-else-if="idDetails !== entry.id">
+              <div v-else-if="idFullDocument !== entry.id">
                 <h2>{{ entry["title"] }}</h2>
                 <p
                   v-if="searchQuery !== ''"
@@ -180,10 +191,10 @@ export default {
               </div>
             </td>
             <td class="document-button">
-              <button @click="showMoreDetail(entry.id)">
+              <button @click="showFullDocument(entry.id)">
                 <span
                   class="arrow"
-                  :class="idDetails === entry.id ? 'dsc' : 'right'"
+                  :class="idFullDocument === entry.id ? 'dsc' : 'right'"
                 >
                 </span>
               </button>
@@ -193,7 +204,7 @@ export default {
           <tr
             class="full-document-row"
             :key="entry.title"
-            v-if="idDetails == entry.id"
+            v-if="idFullDocument == entry.id"
           >
             <td colspan="5">
               <h2>{{ entry["title"] }}</h2>
@@ -226,9 +237,6 @@ export default {
   background-color: var(--background-color);
   flex-grow: 1;
   padding: 0 20px 20px 20px;
-}
-.PatientDocuments__document{
-  /* text-align: right; */
 }
 .PatientDocuments__document-year {
   font-weight: 700;
@@ -300,7 +308,7 @@ th {
 table .full-document-row {
   border-bottom: 1px solid var(--color-border);
 }
-table .top-border{
+table .top-border {
   border-top: 1px solid var(--color-border);
 }
 th.active .arrow {

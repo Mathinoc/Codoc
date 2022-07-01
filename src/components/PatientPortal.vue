@@ -26,50 +26,26 @@ export default {
       })
         .then((data) => data.json())
         .then((patient) => {
-          const textDocuments = patient.documents.map((el) => {
-            const text = this.cleanUpHtml(el.displayed_text);
-            el.displayed_text = text;
+          const textDocuments = patient.documents.map((el, index) => {
+            el["date"] = el.document_date;
+            el["type"] = el.document_type;
+            el["origine"] = el.document_origin_code;
+            el.id = index;
+            el.displayed_text = this.cleanUpHtml(el.displayed_text);
+            delete el.document_date;
+            delete el.document_type;
+            delete el.document_origin_code;
+
             return el;
           });
           patient.documents = textDocuments;
           return patient;
         })
-        .then((patient) => {
-          const documents = patient.documents.map((el, index) => {
-            el["date"] = el.document_date //this.formatDate(el.document_date);
-            el["type"] = el.document_type;
-            el["origine"] = el.document_origin_code;
-            el.id = index;
-            delete el.document_date;
-            delete el.document_type;
-            delete el.document_origin_code;
-            return el;
-          });
-          patient.documents = documents;
-          return patient;
-        })
         .then((patient) => (this.patientData = patient))
-        .catch((error) => console.log(error));
-    },
-    convertToPlain(html) {
-      let tempDivElement = document.createElement("div");
-      tempDivElement.innerHTML = html;
-      return tempDivElement.textContent || tempDivElement.innerText || "";
+        .catch((error) => console.error(error));
     },
     cleanUpHtml(html) {
       return html.replace(/(\\n)*(\\t)*/g, "");
-    },
-    formatDate(dateStr) {
-      const options = {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      };
-      const rawDate = new Date(Date.parse(dateStr)).toLocaleDateString(
-        "fr-FR",
-        options
-      );
-      return rawDate;
     },
   },
 };
@@ -78,7 +54,7 @@ export default {
 <template>
   <div class="PatientPortal">
     <PatientNavigation
-      :data="patientData"
+      :patientData="patientData"
       @response="(search) => (searchQuery = search)"
     />
     <PatientDocuments

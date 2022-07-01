@@ -1,12 +1,12 @@
 <script>
 export default {
-  data() {
+  patientData() {
     return {
       searchQuery: "",
     };
   },
   props: {
-    data: Object,
+    patientData: Object,
   },
   emits: ['response'],
   methods: {
@@ -36,25 +36,25 @@ export default {
 </script>
 
 <template>
-  <div class="PatientNavigation" v-if="data">
+  <div class="PatientNavigation" v-if="patientData">
     <div class="PatientNavigation__top">
       <div class="PatientNavigation__top-info">
         <p class="patient-name">
-          {{ data.first_name }} {{ data.last_name }}
-          <span class="patient-id">#{{ data.id }}</span>
+          {{ patientData.first_name }} {{ patientData.last_name }}
+          <span class="patient-id">#{{ patientData.id }}</span>
         </p>
-        <p v-if="data.sex === 'F'">
-          <span class="patient-data-type">Née le</span>
-          {{ formatDate(data.birth_date) }}
+        <p v-if="patientData.sex === 'F'">
+          <span class="patient-patientData-type">Née le</span>
+          {{ formatDate(patientData.birth_date) }}
           <img height="15px" src="../assets/female.png" /> Femme
         </p>
         <p v-else>
-          <span class="patient-data-type">Né le</span>
-          {{ formatDate(data.birth_date) }}
+          <span class="patient-patientData-type">Né le</span>
+          {{ formatDate(patientData.birth_date) }}
           <img height="15px" src="../assets/male.png" /> Homme
         </p>
 
-        <p><span class="patient-data-type">IPP:</span> {{ data.ipp }}</p>
+        <p><span class="patient-patientData-type">IPP:</span> {{ patientData.ipp }}</p>
       </div>
       <div class="PatientNavigation__top-search">
         <div class="PatientNavigation__top-search-input-elements">
@@ -157,7 +157,7 @@ export default {
 .PatientNavigation__top-info .patient-name .patient-id {
   font-size: 14px;
 }
-.PatientNavigation__top-info .patient-data-type {
+.PatientNavigation__top-info .patient-patientData-type {
   font-weight: 500;
   color: var(--font-color-light-grey);
 }

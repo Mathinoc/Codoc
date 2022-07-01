@@ -1,24 +1,12 @@
 # codoc
 
-## Project setup
-```
-npm install
-```
+The Codoc patient portal allows the user to view a patient and their corresponding documents. The patient identifying information is displayed in the upper left hand corner. Documents can be searched using the search bar and expanded using the right hand arrow.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Getting started
 
-### Compiles and minifies for production
-```
-npm run build
-```
+1. Fork this repo and clone a copy on your local machine.
 
-### Lints and fixes files
-```
-npm run lint
-```
+2. Install the dependencies: run `npm i` from the codoc folder.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+3. Start the app: run `npm run serve` from the codoc folder to run the app in a development mode.
+

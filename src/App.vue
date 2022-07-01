@@ -25,12 +25,12 @@ export default {
 <style>
 :root {
   --header-height: 50px;
-  --font-color-blue: #233C73;
-  --font-color-grey: #686F78;
-  --font-color-light-grey: #A0A7B0;
-  --color-border: #D5D7DE;
+  --font-color-blue: #233c73;
+  --font-color-grey: #686f78;
+  --font-color-light-grey: #a0a7b0;
+  --color-border: #d5d7de;
   --global-radius: 5px;
-  --background-color: #F8F9F9;
+  --background-color: #f8f9f9;
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
